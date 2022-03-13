@@ -22,16 +22,39 @@ int main(int argc, char *argv[]) {
     // Get status about the first rom file:
     struct stat in1_status;
     if (stat(rom1_filename, &in1_status) == -1) {
-        perror("stat");
+        perror("stat rom1");
         exit(EXIT_FAILURE);
     }
 
     // Allocate some memory for reading in the first rom based on the stat structure
-    char* in1_file_contents = malloc(in1_status.st_size);
+    unsigned char* in1_file_contents = malloc(in1_status.st_size);
     fread(in1_file_contents, in1_status.st_size, 1, in1_file);
 
     // Write out the first few bytes of the read info to make sure things are sane
     printf("ROM1 data: 0x%02x 0x%02x 0x%02x 0x%02x\n", in1_file_contents[0], in1_file_contents[1], in1_file_contents[2], in1_file_contents[3]);
+
+
+    // Open NIBBLE ROM
+    FILE* nibble_file = fopen(rom3_filename, "rb");
+    if (!nibble_file) {
+        perror("fopen");
+        exit(EXIT_FAILURE);
+    }
+    // Get nibble file size (just in case)
+    struct stat nibble_status;
+    if (stat(rom3_filename, &nibble_status) == -1) {
+        perror("stat nibble");
+        exit(EXIT_FAILURE);
+    }
+    // Allocate some memory for reading nibble file
+    unsigned char* nibble_contents = malloc(nibble_status.st_size);
+    fread(nibble_contents, nibble_status.st_size, 1, nibble_file);
+
+    // Write out the first few bytes of nibble to make sure we're sane
+    printf("Nibble data: 0x%02x 0x%02x 0x%02x 0x%02x\n", nibble_contents[0], nibble_contents[1], nibble_contents[2], nibble_contents[3]);
+
+
+
 
 
     // Open the first rom combined output for writing
@@ -45,16 +68,21 @@ int main(int argc, char *argv[]) {
     fwrite(&in1_file_contents[1], 1, 1, output1_file);
     fwrite(&in1_file_contents[2], 1, 1, output1_file);
     fwrite(&in1_file_contents[3], 1, 1, output1_file);
-    printf("Done writing.\n");
 
+    // for (int i = 0; i++; i<in1_status.st_size) {
+    // }
+
+    printf("Done writing.\n");
     // Close the output file
     fclose(output1_file);
 
 
-    // Close the input file
+    // Close the input files
+    fclose(nibble_file);
     fclose(in1_file);
 
     // Free the allocated memory:
+    free(nibble_contents);
     free(in1_file_contents);
 
     return 0;
