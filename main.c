@@ -12,6 +12,7 @@ int main(int argc, char *argv[]) {
     const char* combined_rom1_output = "low_output.bin";
     const char* combined_rom2_output = "high_output.bin";
 
+    //=====
     // Open the first rom for reading
     FILE* in1_file = fopen(rom1_filename, "rb");
     if (!in1_file) {
@@ -32,8 +33,32 @@ int main(int argc, char *argv[]) {
 
     // Write out the first few bytes of the read info to make sure things are sane
     printf("ROM1 data: 0x%02x 0x%02x 0x%02x 0x%02x\n", in1_file_contents[0], in1_file_contents[1], in1_file_contents[2], in1_file_contents[3]);
+    //=====
 
+    //=====
+    // Open the SECOND rom for reading
+    FILE* in2_file = fopen(rom2_filename, "rb");
+    if (!in2_file) {
+        perror("fopen");
+        exit(EXIT_FAILURE);
+    }
 
+    // Get status about the first rom file:
+    struct stat in2_status;
+    if (stat(rom2_filename, &in2_status) == -1) {
+        perror("stat rom2");
+        exit(EXIT_FAILURE);
+    }
+
+    // Allocate some memory for reading in the first rom based on the stat structure
+    unsigned char* in2_file_contents = malloc(in2_status.st_size);
+    fread(in2_file_contents, in2_status.st_size, 1, in2_file);
+
+    // Write out the first few bytes of the read info to make sure things are sane
+    printf("ROM2 data: 0x%02x 0x%02x 0x%02x 0x%02x\n", in2_file_contents[0], in2_file_contents[1], in1_file_contents[2], in1_file_contents[3]);
+    //=====
+
+    //=====
     // Open NIBBLE ROM
     FILE* nibble_file = fopen(rom3_filename, "rb");
     if (!nibble_file) {
@@ -71,6 +96,21 @@ int main(int argc, char *argv[]) {
 
     // for (int i = 0; i++; i<in1_status.st_size) {
     // }
+
+    // For each 8-bit byte sample...
+    for (int j = 0; j < 10; j = j + 1) {
+        //... Print the bytes of the sample you'd expect:
+        u_int16_t new_sample_low = in2_file_contents[j];
+        u_int8_t nibble_low = 0xbe; //nibble_contents[j] & 0x0f) << 4;
+
+        printf("ROM1 sample %i: 0x%02x 0x%02x\t", j, new_sample_low, nibble_low);
+
+        u_int16_t new_sample_high = in1_file_contents[j];
+        u_int8_t nibble_high = 0xbf; //(nibble_contents[j] & 0xf0);
+
+        printf("ROM2 sample %i: 0x%02x 0x%02x\n", j, new_sample_high, nibble_high);
+
+    }
 
     printf("Done writing.\n");
     // Close the output file
